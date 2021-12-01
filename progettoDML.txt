@@ -1,0 +1,584 @@
+--
+-- Queries
+--
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.1 Inserimento nuovo contratto cliente (otto volte al giorno) 
+-- Questa operazione può essere fatta solamente se sono già stati inseriti: il cliente associato al contratto, il modem associato al contratto e l'offerta scelta dal cliente
+--
+-- Nel caso in cui nel contratto fosse compilato anche il campo relativo alla data di fine vincolo contrattuale, bisognerà eseguire la seguente operazione di inserimento: 
+--
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values (<CC12345678>, <data_stipulazione_contratto>, <data_fine_vincolo_contrattuale>, <'bollettino'|'c/c'>, <'ADSL'|'FTTC'|'FTTH'>, <ABC1234567890123Z>, <via_di_fornitura>, <numero_civico>, <CAP>, <citta>, <nome_offerta_scelta>, <codice_seriale_del_modem_associato>, <codice_del_cliente_interessato>);
+
+--
+-- Nel caso in cui nel contratto non fosse compilato il campo relativo alla data di fine vincolo contrattuale, bisognerà eseguire la seguente operazione di inserimento: 
+--
+
+insert into ContrattoCliente (Codice, Data, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values (<CC12345678>, <data_stipulazione_contratto>, <'bollettino'|'c/c'>, <'ADSL'|'FTTC'|'FTTH'>, <ABC1234567890123Z>, <via_di_fornitura>, <numero_civico>, <CAP>, <citta>, <nome_offerta_scelta>, <codice_seriale_del_modem_associato>, <codice_del_cliente_interessato>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Aggiornamento del numero di contratti associati al cliente
+--
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = <codice_cliente_stipulante>) 
+where Codice = <codice_cliente_stipulante>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.2 Inserimento nuovo cliente (quattro volte al giorno) 
+--
+
+insert into Cliente (Fascia, ViaFatt, NcivicoFatt, CAPFatt, CittaFatt, Tipo, PIVAoCF, Nome, Cognome, DataNasc, RagSoc, NomeAz)
+values (<'Residenziale'|'Affari'|'Alta'>, <via_di_fatturazione>, <numero_civico>, <CAP>, <citta>, <'privato'|'azienda'>, <partita_IVA_azienda_o_codice_fiscale_del_privato>, <nome_del_privato>, <cognome_del_privato>, <data_di_nascita_del_privato>, <ragione_sociale_azienda>, <nome_azienda>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento del recapito e-mail 
+-- Questa operazione va effettuata tante volte quanti gli indirizzi di posta elettronica forniti dal cliente al momento della stipulazione del contratto
+--
+
+insert into Email (Indirizzo, CodCliente)
+values (<indirizzo_di_posta_elettronica_del_cliente>, <codice_del_cliente>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.3 Inserimento nuovo tecnico (dieci volte l'anno) 
+--
+
+insert into Tecnico (CF, Nome, Cognome, DataNasc, Ruolo, Skill, Via, Ncivico, CAP, Citta)
+values (<codice_fiscale_del_tecnico>, <nome_del_tecnico>, <cognome_del_tecnico>, <data_di_nascita_del_tecnico>, <'interno'|'esterno'>, <'base'|'giuntista'|'centrale telefonica'>, <via>, <numero_civico>, <CAP>, <citta>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.4 Inserimento nuovo contratto dipendente (dieci volte l'anno)
+-- Questa operazione può essere effettuata solamente se il tecnico è gia presente nella base di dati
+-- La durata del contratto viene inserita solamente se il contratto è a tempo determinato
+--
+
+insert into ContrattoDipendente(Codice, Data, Tipo, Durata, CodTecnico)
+values (<CD12345678>, <data_di_stipulazione_del_contratto>, <'determinato'|'indeterminato'>, <durata_del_contratto>, <codice_del_tecnico_associato>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.5 Inserimento nuova offerta (una volta ogni due mesi) 
+--
+
+insert into Offerta (Nome, CostoMens, CostoAtt)
+values (<nome_della_offerta>, <costo_mensile_della_offerta>, <costo_di_attivazione_della_offerta>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.6 Inserimento nuovo guasto (quindici volte al giorno) 
+-- Nel caso il guasto venga segnalato e inserito lo stesso giorno è possibile anche omettere l'inserimento della data con relativo orario 
+--
+-- Nel caso in cui il guasto sia relativo al cliente dovrà essere seguita la seguente operazione:
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values (<data_apertura_del_guasto>, <'basso'|'medio'|'alto'>, <'assistenza'|'linea utente'>, <codice_del_cliente_segnalante_il_guasto>, <descrizione_guasto_fornita_dal_cliente>, <recapito_telefonico_del_cliente>);
+
+--
+-- Nel caso in cui il guasto sia relativo ad un impianto bisognerà eseguire le seguenti operazioni:
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values (<data_apertura_del_guasto>, <'basso'|'medio'|'alto'>, <'centrale'>, <codice_impianto_malfunzionante>);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = <codice_impianto_malfunzionante>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (<codice_tecnico_incaricato>, <codice_guasto_da_riparare>, <codice_attrezzatura_utilizzata_nella_riparazione>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Modifica della quantità disponibile dell'attrezzatura utilizzata per la riparazione (se utilizzata)
+--
+
+update Attrezzatura set qta = (qta-1)
+where Codice = <codice_della_attrezzatura_utilizzata>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.7 Inserimento nuova bolletta linea fissa (una volta al mese per ogni contratto)
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values (<data_emissione_della_bolletta>, <data_di_scadenza_della_bolletta>, <periodo_di_fatturazione>, <codice_seriale_del_modem>);
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = <codice_cliente_esaminato> and DataChiusura between <data_inizio_fatturazione_mensile> and <data_fine_fatturazione_mensile>)
+where CodModem = <codice_seriale_modem> and NFattura = <numero_fattura_considerata>;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = <codice_cliente_esaminato> and DataChiusura between <data_inizio_fatturazione_mensile> and <data_fine_fatturazione_mensile>)
+where CodModem = <codice_seriale_modem> and NFattura = <numero_fattura_considerata>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.8 Inserimento modem (otto volte al giorno)
+--
+
+insert into Modem (CSeriale, Numero, Tipo)
+values (<codice_seriale_del_modem>, <numero_di_telefono_associato>, <'ADSL'|'VDLS'>);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.9 Inserimento attrezzatura (una volta al mese)
+--
+
+insert into Attrezzatura (Codice, qta, qtamin, Scaffale, Ripiano)
+values (<codice_della_attrezzatura>, <quantita_disponibile>, <quantita_minima_obbligatoria>, <scaffale>, <ripiano>);
+
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.10 Consultazione guasti, relativi alla linea del cliente, chiusi nella giornata odierna, visualizzando la durata di riparazione del guasto, ordinati per fascia cliente e durata di riparazione (una volta al giorno)
+--
+select DATEDIFF(Guasto.DataChiusura, Guasto.DataApertura) as Durata_Riparazione, Cliente.Fascia, Guasto.* 
+from Guasto join Cliente 
+where Guasto.CodCliente=Cliente.Codice and Guasto.DataChiusura = DATE(CURRENT_TIMESTAMP) and Guasto.Tipo = 'linea utente'
+order by Cliente.Fascia, Durata_Riparazione;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.11 Consultazione assistenze chiuse nella giornata odierna (una volta al giorno)
+--
+select *
+from Guasto
+where Guasto.DataChiusura = DATE(CURRENT_TIMESTAMP) Guasto.Tipo = 'assistenza';
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.12 Inserimento rimborso guasto (due volte al giorno)
+--
+
+update Guasto set Rimborso=<rimborso_del_guasto> 
+where Guasto.Codice = <codice_guasto_da_rimborsare>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.13 Inserimento costo assistenza (due volte al giorno)
+--
+
+update Guasto set Costo=<costo_assistenza> 
+where Guasto.Codice = <codice_guasto_assistenza>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.14 Modifica contratto cliente (quattro volte a settimana)
+--
+
+--
+-- Nel caso la modifica riguardasse il metodo di pagamento:
+--
+
+update ContrattoCliente set MetodoPag = <nuovo_metodo_di_pagamento> 
+where Codice = <codice_del_contratto_cliente>;
+
+--
+-- Nel caso la modifica riguardasse l'indirizzo di fornitura:
+--
+
+update ContrattoCliente set ViaForn = <'nuova_via_fornitura'>, NciForn = <nuovo_numero_civico_fornitura>, CAPForn = <nuovo_CAP_fornitura>, CittaForn = <nuova_citta_fornitura>
+where Codice = <codice_del_contratto_cliente>;
+
+--
+-- Nel caso la modifica riguardasse il cambio dell'offerta:
+--
+
+update ContrattoCliente set NomeOff=<'nome_nuova_offerta_scelta'>
+where Codice = <codice_del_contratto_cliente>; 
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.15 Modifica contratto dipendente (tre volte l'anno)
+--
+
+update ContrattoDipendente set Tipo = <'determinato'|'indeterminato'>, Durata = <'nuova_durata'|NULL> 
+where Codice = <codice_del_contratto>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.16 Modifica attrezzatura (una volta a settimana)
+--
+
+--
+-- Nel caso la modifica riguardasse la disponibilità dell'attrezzatura dopo il rifornimento:
+--
+
+update Attrezzatura set qta = <nuova_quantità> 
+where Codice = <codice_attrezzatura>;
+
+--
+-- Nel caso la modifica riguardasse il cambiamento della quantità minima:
+--
+
+update Attrezzatura set qtamin = <nuova_quantità_minima> 
+where Codice = <codice_attrezzatura>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.17 Chiusura guasto (tredici volte al giorno)
+--
+
+update Riparazione set Stato = <'effettuata'>
+where CodGuasto = <codice_guasto_da_chiudere>;
+
+update Guasto set DataChiusura = <data_chiusura_del_guasto>
+where Codice = <codice_guasto_da_chiudere>;
+
+--
+-- Nel caso la chiusura riguardasse un guasto agli impianti dell'azienda, bisognerà effettuare anche la seguente operazione:
+--
+
+update Impianto set Stato = 'attivo'
+where Codice = <codice_impianto_riparato>;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = <codice_del_tecnico_che_ha_riparato_il_guasto> and Stato = 'effettuata')
+where Codice = <codice_del_tecnico_che_ha_riparato_il_guasto>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.18 Cancellazione cliente (una volta ogni due mesi)
+-- Questa operazione può essere eseguita solo nel caso in cui al cliente non sia associato più nessun contratto
+--
+
+delete from Cliente 
+where Codice = <codice_cliente_da_eliminare>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.19 Cancellazione contratto cliente (una volta al mese)
+--
+
+delete from ContrattoCliente 
+where Codice = <codice_contratto_cliente_da_eliminare>;
+
+--
+-- Aggiornamento del numero dei contratti associati al cliente
+--
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = <codice_cliente_stipulante>) 
+where Codice = <codice_cliente_stipulante>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.20 Cancellazione tecnico (una volta l'anno)
+-- Questa operazione può essere eseguita solamente se al tecnico non è associato alcun contratto
+--
+
+delete from Tecnico 
+where Codice = <codice_del_tecnico_da_eliminare>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.21 Cancellazione contratto dipendente (una volta l'anno)
+--
+
+delete from ContrattoDipendente 
+where Codice = <codice_contratto_lavorativo_da_eliminare>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.22 Cancellazione offerta (una volta ogni due mesi)
+--
+
+delete from Offerta 
+where Nome = <nome_offerta_da_eliminare>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.23 Consultazione dati dei clienti (venti volte al giorno)
+--
+
+select * 
+from Cliente;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.24 Consultazione dati dei contratti clienti (dieci volte al giorno)
+--
+
+select * 
+from ContrattoCliente;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.25 Consultazione dati dei tecnici (quindici volte al giorno)
+--
+
+select * 
+from Tecnico;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.26 Consultazione dati dei contratti dipendenti(cinque volte al giorno)
+--
+
+select * 
+from ContrattoDipendente;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.27 Consultazione dati della bolletta (trenta volte al giorno)
+--
+
+select Bolletta.*, (Offerta.CostoMens+Bolletta.RimborsoGuasti+Bolletta.CostoAssistenze) as Importo
+from Bolletta join Modem join ContrattoCliente join Offerta
+where Bolletta.Nfattura= <numero_bolletta_da_visualizzare> and Bolletta.CodModem = Modem.Cseriale and Modem.Cseriale = ContrattoCliente.CodModem and Contrattocliente.NomeOff = Offerta.Nome;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.28 Statistica numero guasti per tipo (una volta ogni due mesi)
+--
+
+select Tipo, count(Tipo) as Numero_Guasti
+from Guasto
+group by Tipo;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.29 Statistica acquisizione clienti(una volta al mese)
+--
+
+select month(Data), count(Data)
+from ContrattoCliente
+group by month(Data);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.30 Statistica contratti per tipo collegamento(una volta ogni sei mesi)
+--
+
+select TipoCollegamento, count(TipoCollegamento) as Numero_Contratti_Affiliati
+from ContrattoCliente
+group by TipoCollegamento;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.31 Statistica offerta maggiormente sottoscritta dai clienti(una volta ogni due mesi)
+--
+
+select Offerta.Nome, count(Offerta.Nome) as Offerta_Maggiormente_Sottoscritta
+from Offerta join ContrattoCliente on Offerta.Nome=ContrattoCliente.NomeOff 
+group by Offerta.Nome
+order by Offerta_Maggiormente_Sottoscritta DESC LIMIT 1;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.32 Visualizzazione offerta non sottoscritta da alcun cliente (una volta ogni due mesi)
+--
+
+select Offerta.Nome
+from Offerta left join ContrattoCliente
+on Offerta.Nome = ContrattoCliente.NomeOff
+WHERE ContrattoCliente.Codice is NULL;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.33 Statistica numero guasti riparati per tecnico (una volta al mese)
+--
+
+select Codice, NguastiRip
+from Tecnico;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.34 Statistica numero tecnici per ruolo e specializzazione (due volte l'anno)
+--
+
+select Ruolo, Skill, Count(Codice) as Conteggio
+from Tecnico
+group by Ruolo, Skill;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.35 Statistica numero guasti di un dato impianto(una volta al mese)
+--
+
+select Impianto.*, Count(Guasto.Codice) as Numero_Guasti
+from Impianto join Guasto
+where Impianto.Codice = Guasto.CodImpianto and Impianto.Codice = <codice_impianto>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.36 Statistica numero clienti in base alla fascia (due volte l'anno)
+--
+
+select Fascia, Count(Codice) as Numero_Clienti
+from Cliente
+group by Fascia;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.37 Statistica numero contratti per cliente (una volta al mese)
+--
+
+select Codice, NcontrattiAss
+from Cliente;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.38 Statistica ragione sociale azienda(due volte l'anno)
+--
+
+select RagSoc, count(Codice) as Numero_aziende
+from Cliente
+where RagSoc IS NOT NULL
+group by RagSoc;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.39 Statistica dipendenti con contratto a tempo indeterminato(una volta l'anno)
+--
+
+select count(Codice) as Numero_contratti_a_tempo_indeterminato
+from ContrattoDipendente
+where Tipo = 'indeterminato';
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.40 Statistica numero guasti per grado di pericolo (una volta al mese)
+--
+
+select GradoPericolo, count(Codice) as Numero_Guasti
+from Guasto
+group by GradoPericolo;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.41 Verifica avvenuto pagamento bolletta da parte dei clienti (una volta al giorno)
+--
+
+select Cliente.Codice as Codice_Cliente, ContrattoCliente.Codice as Codice_Contratto, Modem.CSeriale as Codice_Seriale_Modem, Bolletta.Nfattura, DATE(Bolletta.Data) as Data_Emissione_Fattura, Bolletta.Scadenza, Bolletta.Periodo, Bolletta.RimborsoGuasti, Bolletta.CostoAssistenze, (Offerta.CostoMens+Bolletta.RimborsoGuasti+Bolletta.CostoAssistenze) as Importo
+from Cliente join ContrattoCliente join Offerta join Modem join Bolletta
+where Cliente.Codice = ContrattoCliente.CodCliente and ContrattoCliente.NomeOff = Offerta.Nome and ContrattoCliente.CodModem = Modem.CSeriale and Modem.CSeriale = Bolletta.CodModem and Bolletta.StatoPag = 'non effettuato';
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.42 Visualizzazione bollette con scadenza la settimana successiva alla data di consultazione (una volta a settimana)
+--
+
+select Cliente.Codice as Codice_Cliente, ContrattoCliente.Codice as Codice_Contratto, Modem.CSeriale as Codice_Seriale_Modem, Bolletta.Nfattura, DATE(Bolletta.Data) as Data_Emissione_Fattura, Bolletta.Scadenza, Bolletta.Periodo, Bolletta.RimborsoGuasti, Bolletta.CostoAssistenze, (Offerta.CostoMens+Bolletta.RimborsoGuasti+Bolletta.CostoAssistenze) as Importo
+from Cliente join ContrattoCliente join Offerta join Modem join Bolletta
+where Cliente.Codice = ContrattoCliente.CodCliente and ContrattoCliente.NomeOff = Offerta.Nome and ContrattoCliente.CodModem = Modem.CSeriale and Modem.CSeriale = Bolletta.CodModem and Bolletta.StatoPag = 'non effettuato' and (DATEDIFF(Bolletta.Scadenza, DATE(CURRENT_TIMESTAMP)) between 0 and 7);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.43 Aggiornamento pagamento (una volta al mese per ogni contratto)
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = <numero_fattura_bolletta_pagata>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.44 Consultazione tecnici occupati(quindici volte al giorno)
+--
+
+select distinct Tecnico.Codice, Tecnico.Nome, Tecnico.Cognome, Tecnico.Ruolo, Tecnico.Skill, count(Tecnico.Codice) as quantita
+from Tecnico join Riparazione
+where Tecnico.Codice = Riparazione.CodTecnico and Riparazione.Stato = 'in corso'
+group by Tecnico.Codice;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.45 Sostituzione Modem (due volte al giorno)
+--
+
+update Modem set CSeriale = <codice_seriale_nuovo_modem>, Tipo = <'ADSL'|'VDSL'>
+where CSeriale = <codice_seriale_vecchio_modem>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.46 Cessazione contratto cliente (una volta al mese)
+--
+
+update ContrattoCliente set Stato = 'cessato'
+where Codice = <codice_contratto_cliente_cessato>;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- 5.2.47 Cessazione contratto dipendente (una volta l'anno)
+--
+
+update ContrattoDipendente set Stato = 'cessato'
+where Codice = <codice_contratto_dipendente_cessato>;

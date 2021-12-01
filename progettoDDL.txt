@@ -1,0 +1,2208 @@
+-- ---------------------------------------------------------------------------
+
+--
+-- Database: 'ZeusPhone'
+--
+
+-- ---------------------------------------------------------------------------
+
+DROP DATABASE ZeusPhone;
+
+CREATE DATABASE ZeusPhone;
+
+USE ZeusPhone;
+
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Cliente'
+--
+
+create table Cliente(
+Codice int PRIMARY KEY auto_increment,
+Fascia enum('Residenziale','Affari','Alta') not null,
+ViaFatt varchar(30) not null,
+NcivicoFatt int not null,
+CAPFatt int not null,
+CittaFatt varchar(30) not null,
+Tipo enum('privato','azienda') not null,
+PIVAoCF varchar(16),
+Nome varchar(30),
+Cognome varchar(30),
+DataNasc date,
+RagSoc varchar(10),
+NomeAz varchar(50),
+NcontrattiAss int default 0 not null,
+check(PIVAoCF like '___________' or PIVAoCF like '________________'));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Offerta'
+--
+
+create table Offerta(
+Nome varchar(30) primary key,
+CostoMens decimal(4,2) not null,
+CostoAtt decimal(4,2) not null,
+check(CostoMens>0),
+check(CostoAtt>0));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Modem'
+--
+
+create table Modem(
+CSeriale char(11) primary key,
+Numero char(10) not null,
+Tipo enum('ADSL','VDSL'),
+check(CSeriale like '___________'));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'ContrattoCliente'
+--
+
+create table ContrattoCliente(
+Codice char(10) PRIMARY KEY,
+Data TIMESTAMP default CURRENT_TIMESTAMP not null,
+FineVincolo TIMESTAMP default CURRENT_TIMESTAMP not null,
+MetodoPag enum('bollettino','c/c') not null,
+TipoCollegamento enum('ADSL','FTTC','FTTH') not null,
+CodiceMigrazione char(17) not null,
+ViaForn varchar(30) not null,
+NcivForn int not null,
+CAPForn int not null,
+CittaForn varchar(30) not null,
+NomeOff varchar(30) not null,
+CodModem char(11) not null,
+CodCliente int not null,
+Stato enum('attivo','cessato') default 'attivo' not null,
+FOREIGN KEY (NomeOff) references Offerta(Nome) ON UPDATE CASCADE ON DELETE NO ACTION,
+FOREIGN KEY (CodModem) references Modem(CSeriale) ON UPDATE CASCADE ON DELETE NO ACTION,
+FOREIGN KEY (CodCliente) references Cliente(Codice) ON UPDATE CASCADE ON DELETE NO ACTION, 
+check(Codice like 'CC________'),
+check(CodiceMigrazione like '_________________'));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Tecnico'
+--
+
+create table Tecnico(
+Codice int primary key auto_increment,
+CF char(16) not null,
+Nome varchar(30) not null,
+Cognome varchar(30) not null,
+DataNasc date not null,
+Ruolo enum('interno','esterno') not null,
+Skill enum('base','giuntista','centrale telefonica') not null,
+Via varchar(30) not null,
+Ncivico int not null,
+Cap int not null,
+Citta varchar(30) not null,
+NguastiRip int default 0 not null,
+check(CF like '________________'));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'ContrattoDipendente'
+--
+
+create table ContrattoDipendente(
+Codice char(10) primary key,
+Data TIMESTAMP default CURRENT_TIMESTAMP not null,
+Tipo enum('determinato', 'indeterminato') not null,
+Durata tinyint,
+CodTecnico int not null,
+Stato enum('attivo','cessato') default 'attivo' not null,
+FOREIGN KEY (CodTecnico) references Tecnico(Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+check(Codice like 'CD________'));
+
+
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Bolletta'
+--
+
+create table Bolletta(
+Nfattura int primary key auto_increment,
+Data TIMESTAMP default CURRENT_TIMESTAMP not null,
+Scadenza date not null,
+Periodo char(21) not null,
+StatoPag enum('effettuato','non effettuato') default 'non effettuato' not null,
+RimborsoGuasti decimal(6,2) default 0 not null,
+CostoAssistenze decimal(6,2) default 0 not null,
+CodModem char(11) not null,
+FOREIGN KEY (CodModem) references Modem (CSeriale) ON UPDATE CASCADE ON DELETE NO ACTION,
+check(RimborsoGuasti<=0),
+check(CostoAssistenze>=0));
+
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Impianto'
+--
+
+create table Impianto(
+Codice int primary key auto_increment,
+Stato enum('attivo', 'malfunzionante') default 'attivo' not null,
+Tipo enum('Fibra Ottica','Linea Rame','Piastra Utente') not null);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Guasto'
+--
+
+create table Guasto(
+Codice int primary key auto_increment,
+DataApertura TIMESTAMP default CURRENT_TIMESTAMP not null,
+DataChiusura TIMESTAMP,
+Rimborso decimal(6,2) default 0 not null,
+Costo decimal(6,2) default 0 not null,
+GradoPericolo enum('basso','medio','alto') not null,
+Tipo enum('assistenza','linea utente','centrale') not null,
+CodImpianto int,
+CodCliente int,
+RecapitoCl char(10),
+Descrizione varchar(250),
+FOREIGN KEY (CodCliente) references Cliente (Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+FOREIGN KEY (CodImpianto) references Impianto (Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+check(Rimborso<=0),
+check(Costo>=0));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Attrezzatura'
+--
+
+create table Attrezzatura(
+Codice varchar(30) primary key,
+qta int not null,
+qtamin int not null,
+Scaffale char(30) not null,
+Ripiano int not null,
+check (qta>0),
+check(qtamin>0),
+check(qta>qtamin));
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Email'
+--
+
+create table Email(
+Indirizzo varchar(50) PRIMARY KEY,
+CodCliente int not null,
+FOREIGN KEY (CodCliente) references Cliente (Codice) ON UPDATE CASCADE ON DELETE NO ACTION);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Struttura della tabella 'Riparazione'
+--
+
+create table Riparazione(
+CodTecnico int,
+CodGuasto int,
+CodAttrezzatura varchar(30),
+Stato enum('in corso','effettuata') default 'in corso' not null,
+PRIMARY KEY(CodTecnico,CodGuasto),
+FOREIGN KEY (CodTecnico) references Tecnico (Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+FOREIGN KEY (CodGuasto) references Guasto (Codice) ON UPDATE CASCADE ON DELETE NO ACTION,
+FOREIGN KEY (CodAttrezzatura) references Attrezzatura (Codice) ON UPDATE CASCADE ON DELETE NO ACTION);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Queries di inserimento
+--
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Cliente fascia residenziale
+--
+
+insert into Cliente (Fascia, ViaFatt, NcivicoFatt, CAPFatt, CittaFatt, Tipo, PIVAoCF, Nome, Cognome, DataNasc)
+values ('Residenziale', 'via Romani', 15, 20019, 'Milano', 'privato', 'RSSMRA80A01F205X', 'Mario','Rossi', '1980-01-01'),
+('Residenziale', 'via Battisti', 25, 61121, 'Pesaro', 'privato', 'BNCCSN96R48G479Q', 'Cassandra','Bianchi', '1996-10-08'),
+('Residenziale', 'via Milano', 98, 35485, 'Padova', 'privato', 'FSCDNL69E08G224O', 'Daniele','Foscari', '1969-05-05'),
+('Residenziale', 'via Leotti', 21, 98754, 'Ancona', 'privato', 'NGLGLN93S46A271Q', 'Giuliana', 'Angeli', '1993-11-06'),
+('Residenziale', 'via Leopardi', 45, 60234, 'Trieste', 'privato', 'GLLLSS67D05L424O','Alessio', 'Gialli', '1967-04-05'),
+('Residenziale', 'via Rovereto', 23, 63965, 'Genova', 'privato', 'FSCWTR84C27D969F', 'Walter', 'Foschi', '1984-03-27');
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Cliente fascia affari e alta
+--
+
+insert into Cliente (Fascia, ViaFatt, NcivicoFatt, CAPFatt, CittaFatt, Tipo, PIVAoCF, RagSoc, NomeAz)
+values ('Affari', 'via Roveri', 25, 80122, 'Napoli', 'azienda', '25698874236', 's.r.l.', 'Pulisci Rapido s.r.l.'),
+('Affari', 'via Costantini', 57, 35121, 'Padova', 'azienda', '49663255777', 's.r.l.', 'Bar Dario s.r.l.'),
+('Affari', 'via Pollini', 17, 20019, 'Milano', 'azienda', '40002455897', 's.r.l.', 'Bar Carlo s.r.l.'),
+('Affari', 'via Paride', 76, 64100, 'Teramo', 'azienda', '75902453167', 's.n.c.', 'KitKet Cioccolato s.n.c.'),
+('Affari', 'via Vittoria', 95, 10122, 'Torino', 'azienda', '78446952000', 's.n.c.', 'Katy Fashion s.n.c.'),
+('Affari', 'via Boccaccio', 88, 67123, 'Firenze', 'azienda', '42645589605', 's.a.s.', 'Macrosoft s.a.s.'),
+('Alta', 'via Zara', 59, 61121, 'Pesaro', 'azienda', '49856321569', 's.p.a.', 'StampaPlus s.p.a.'),
+('Alta', 'via Primi', 44, 35121, 'Padova', 'azienda', '44444598756', 's.p.a.', 'Canod s.p.a.'),
+('Alta', 'via Secondi', 98, 67801, 'Mantova', 'azienda', '44324590811', 's.p.a.', 'Risparmio Cose s.p.a.');
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento del recapito email
+--
+
+insert into Email (Indirizzo, CodCliente)
+values ('mario.rossi@gmail.com', 1),
+('m.rossi01@outlook.it', 1),
+('m.rossi80@virgilio.it', 1),
+('cassandrabianchi@alice.it', 2),
+('c.bianchi08@outlook.it', 2),
+('cassandra.bianchi96@virgilio.it', 2),
+('foscari.daniele@gmail.com', 3),
+('d.foscari05@outlook.it', 3),
+('giuly.angi@poste.com', 4),
+('angela.giuliani11@gmail.com', 4),
+('aleyellow67@alice.it', 5),
+('alessio.gialli@virgilio.it', 5),
+('gialli.ale04@outlook,it',5),
+('foschi.walter@poste.com', 6),
+('w.foschi@alice.it', 6),
+('puliscirapido@segreteria.com', 7),
+('bardario@alice.it', 8),
+('ilbardidario23@gmail.com', 8),
+('barcarlo@hotmail.it', 9),
+('carlosbar@outlook.it', 9),
+('kitketciocco@gmail.com', 10),
+('cioccolatokitket@virgilio.it', 10),
+('katyfashion@fastwebnet.it', 11),
+('katy.fashion@alice.it', 11),
+('macrosoft@outlook.it', 12),
+('macrosoft.sas@gmail.com', 12),
+('stampaplus@stampeonline.it', 13),
+('stampaplus@segreteriastampa.it', 13),
+('canodspa@spesasemplice.it', 14),
+('canodspa@ufficiosegreteria.it', 14),
+('risparmiocose@risparmio.it', 15),
+('risparmiocose@segreteriamministrativa.it', 15);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento offerta
+--
+
+insert into Offerta (Nome, CostoMens, CostoAtt)
+values ('Absolute VDSL', 19.90, 25.90),
+('Absolute ADSL', 29.90, 20.90),
+('Super Fibra', 28.99, 25.90),
+('Ultrainternet Fibra', 27.99, 25.90),
+('Ultra ADSL', 15.99, 18.90),
+('Piu Fibra', 24.99, 27.90),
+('Fibra Unlimited', 34.99, 40.90);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento modem
+--
+
+insert into Modem (CSeriale, Numero, Tipo)
+values ('AK2098DLK89', '0987347658', 'ADSL'),
+('SD1096SJG56', '0700287785', 'VDSL'),
+('AZ6057KOJ23', '0385573753', 'VDSL'),
+('LK6087FGE30', '0745224825', 'ADSL'),
+('PL3065ASW13', '0215378460', 'VDSL'),
+('QW1045OYE34', '0955209212', 'ADSL'),
+('AC2065WJS42', '0665914616', 'VDSL'),
+('PO3309KKF66', '0781922649', 'ADSL'),
+('FD5466OHT23', '0418342762', 'ADSL'),
+('OT3209LIU11', '0878646306', 'VDSL'),
+('OE4578TRE44', '0401135926', 'VDSL'),
+('PT5743QIU02', '0880318625', 'ADSL'),
+('TU5503EOQ45', '0998095194', 'VDSL'),
+('KJ5032WSA18', '0728713830', 'VDSL'),
+('LE6784WQO20', '0310872921', 'ADSL');
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento contratto cliente
+--
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000001', '2017-12-11', DATE_ADD(Data,INTERVAL 2 YEAR), 'c/c', 'FTTC', 'ACX9583103948271A', 'via Romani', 15, 20019, 'Milano', 'Absolute VDSL', 'AC2065WJS42', 1);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 1) 
+where Codice = 1;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000002', '2016-12-11', DATE_ADD(Data,INTERVAL 2 YEAR), 'bollettino', 'ADSL', 'XJE9128374650193Q', 'via Battisti', 25, 61121, 'Pesaro', 'Ultra ADSL', 'AK2098DLK89', 2);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 2) 
+where Codice = 2;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000003', '2019-02-02', Data, 'c/c', 'FTTC', 'AKO0294817503294P', 'via Battisti', 25, 61121, 'Pesaro', 'Ultrainternet Fibra', 'AZ6057KOJ23', 2);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 2) 
+where Codice = 2;
+
+update ContrattoCliente set Stato = 'cessato' where Codice = 'CC00000002';
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000004', '2018-05-02', DATE_ADD(Data,INTERVAL 2 YEAR), 'c/c', 'ADSL', 'AJW0739217403284Z', 'via Leotti', 21, 98754, 'Ancona', 'Absolute ADSL', 'FD5466OHT23', 4);
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000005', '2020-11-22',  DATE_ADD(Data,INTERVAL 2 YEAR), 'c/c', 'FTTH', 'JHY8675935183921E', 'via Massimi', 20, 60024, 'Milano Marittima', 'Ultrainternet Fibra', 'KJ5032WSA18', 4);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 4) 
+where Codice = 4;
+
+update ContrattoCliente set Stato = 'cessato' where Codice = 'CC00000004';
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000006', '2019-03-17', DATE_ADD(Data,INTERVAL 2 YEAR), 'bollettino', 'ADSL', 'UHT1946392758103K', 'via Leopardi', 45, 60234, 'Trieste', 'Ultra ADSL', 'LE6784WQO20', 5);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 5) 
+where Codice = 5;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000007', '2016-12-19', DATE_ADD(Data,INTERVAL 4 YEAR), 'bollettino', 'ADSL','SJX9462917300948I', 'via Rovereto', 23, 63965, 'Genova', 'Absolute ADSL', 'LK6087FGE30', 6);
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000008', '2020-12-19', Data, 'c/c', 'FTTC', 'UHS1958352748192A', 'via Rovereto', 23, 63965, 'Genova', 'Super Fibra', 'OE4578TRE44', 6);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 6) 
+where Codice = 6;
+
+update ContrattoCliente set Stato = 'cessato' where Codice = 'CC00000007';
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000009', '2018-11-04', Data, 'bollettino', 'FTTC','SJX9462917300948I', 'via Costantini', 57, 35121, 'Padova', 'Absolute VDSL', 'OT3209LIU11', 8);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 8) 
+where Codice = 8;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000010', '2020-05-20', DATE_ADD(Data,INTERVAL 3 YEAR), 'c/c', 'FTTC', 'SWD5739281029167G', 'via Paride', 76, 64100, 'Teramo', 'Piu Fibra', 'PL3065ASW13', 10);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 10) 
+where Codice = 10;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000011', '2016-08-25', DATE_ADD(Data,INTERVAL 4 YEAR), 'bollettino', 'ADSL', 'KYG9563917283649D', 'via Vittoria', 95, 10122, 'Torino', 'Absolute ADSL', 'PO3309KKF66', 11);
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000012', '2020-08-25', DATE_ADD(Data,INTERVAL 2 YEAR), 'c/c', 'FTTH', 'SWD5739281029167G', 'via Vittoria', 95, 10122, 'Torino', 'Super Fibra', 'TU5503EOQ45', 11);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 11) 
+where Codice = 11;
+
+update ContrattoCliente set Stato = 'cessato' where Codice = 'CC00000011';
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000013', '2020-04-15', Data, 'bollettino', 'ADSL', 'EFR9483617302947K', 'via Boccaccio', 88, 67123, 'Firenze', 'Absolute ADSL', 'PT5743QIU02', 12);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 12) 
+where Codice = 12;
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000014', '2015-05-25', DATE_ADD(Data,INTERVAL 3 YEAR), 'bollettino', 'ADSL', 'XHE9674920183922D', 'via Primi', 44, 35121, 'Padova', 'Ultra ADSL', 'QW1045OYE34', 14);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 14) 
+where Codice = 14;
+
+update ContrattoCliente set Stato = 'cessato' where Codice = 'CC00000014';
+
+insert into ContrattoCliente (Codice, Data, FineVincolo, MetodoPag, TipoCollegamento, CodiceMigrazione, ViaForn, NcivForn, CAPForn, CittaForn, NomeOff, CodModem, CodCliente)
+values ('CC00000015', '2019-02-11', DATE_ADD(Data,INTERVAL 3 YEAR), 'c/c', 'FTTH', 'DTT9563829154437A', 'via Secondi', 98, 67801, 'Mantova', 'Piu Fibra', 'SD1096SJG56', 15);
+
+update Cliente set NcontrattiAss = (select count(*) from Contrattocliente 
+where CodCliente = 15) 
+where Codice = 15;
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Impianto
+--
+
+insert into Impianto(Tipo)
+values ('Fibra Ottica'),
+('Fibra Ottica'),
+('Linea Rame'),
+('Piastra Utente'),
+('Linea Rame'),
+('Linea Rame'),
+('Linea Rame'),
+('Piastra Utente'),
+('Piastra Utente'),
+('Fibra Ottica'),
+('Fibra Ottica'),
+('Fibra Ottica'),
+('Linea Rame'),
+('Linea Rame'),
+('Piastra Utente'),
+('Piastra Utente'),
+('Fibra Ottica'),
+('Fibra Ottica'),
+('Linea Rame'),
+('Fibra Ottica'),
+('Fibra Ottica'),
+('Linea Rame'),
+('Fibra Ottica'),
+('Linea Rame');
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Tecnico
+--
+
+insert into Tecnico (CF, Nome, Cognome, DataNasc, Ruolo, Skill, Via, Ncivico, CAP, Citta)
+values ('SSSNLM70C03G273K', 'Anselmo', 'Sassi', '1970-03-30', 'interno', 'base', 'via Leopardi', 30, 23098, 'Rovereto'),
+('BTTHLN77C47D612H', 'Helen', 'Bettini', '1977-03-07', 'interno', 'base', 'via Asiaghi', 23, 94387, 'Firenze'),
+('BRNVSS65P44F205F', 'Vanessa', 'Barone', '1965-09-04', 'interno', 'base', 'via Lonelli', 87, 04392, 'Milano'),
+('CSTLBN85A28A944T', 'Albano', 'Castellani', '1985-01-28', 'interno', 'base', 'via Giusti', 56, 51235, 'Torino'),
+('MRCDZN62C63C351K', 'Domiziana', 'Marchesi', '1962-03-23', 'interno', 'base', 'via Orante', 26, 16537, 'Catania'),
+('DNILCN78D25L219W', 'Luciano', 'Diana', '1978-04-25', 'esterno', 'base', 'via Onesti', 57, 62850, 'Torino'),
+('LLLRCC72L29H501P', 'Rocco', 'Lolli', '1972-07-29', 'esterno', 'base', 'via Destri', 43, 96734, 'Roma'),
+('DMRNIO94E01A662N', 'Ione', 'Demarchi', '1994-05-01', 'esterno', 'base', 'via Pantini', 55, 87564, 'Bari'),
+('RCCBTN85A26D969U', 'Ubertino', 'Ricci', '1985-01-26', 'esterno', 'giuntista', 'via Ungaretti', 34, 86243, 'Genova'),
+('CTLVVN92L47L736Q', 'Viviana', 'Catalano', '1992-07-07', 'esterno', 'giuntista', 'via Gireni', 19, 58329, 'Venezia'),
+('MGNGNN87T04F839D', 'Gianni', 'Magnani', '1987-12-04', 'esterno', 'giuntista', 'via Manzoni', 85, 74632, 'Napoli'),
+('DPTNNN89L48G273O', 'Antonina', 'DiPietro', '1989-07-08', 'esterno', 'centrale telefonica', 'via Pirandello', 65, 27398, 'Palermo'),
+('PLNGPP83E14L736D', 'Giuseppe', 'Paolini', '1983-05-14', 'esterno', 'centrale telefonica', 'via Quasimodo', 11, 34023, 'Venezia'),
+('RGGSST80P13C351Y', 'Sebastiano', 'Ruggeri', '1980-09-13', 'esterno', 'centrale telefonica', 'via Parini', 20, 96312, 'Catania'),
+('RNLLVI75H02A944G', 'Livio', 'Rinaldi', '1975-06-02', 'esterno', 'centrale telefonica', 'via Leonardi', 21, 45025, 'Bologna');
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento contratto dipendente
+--
+
+insert into ContrattoDipendente(Codice, Data, Tipo, CodTecnico)
+values ('CD00000001', '2000-07-13', 'indeterminato', 1),
+('CD00000006', '2002-09-11', 'indeterminato', 6),
+('CD00000011', '2005-06-21', 'indeterminato', 11),
+('CD00000014', '2018-11-29', 'indeterminato', 14),
+('CD00000015', '2020-01-09', 'indeterminato', 15);
+
+insert into ContrattoDipendente(Codice, Data, Tipo, Durata, CodTecnico)
+values ('CD00000002', '2016-05-27', 'determinato', 20, 2),
+('CD00000003', '2019-09-11', 'determinato', 24, 3),
+('CD00000004', '2020-05-27', 'determinato', 12, 4),
+('CD00000005', '2018-06-10', 'determinato', 30, 5),
+('CD00000007', '2015-11-17', 'determinato', 20, 7),
+('CD00000008', '2019-04-28', 'determinato', 24, 8),
+('CD00000009', '2020-09-03', 'determinato', 9, 9),
+('CD00000010', '2020-12-29', 'determinato', 2, 10),
+('CD00000012', '2020-10-23', 'determinato', 12, 12),
+('CD00000013', '2014-01-23', 'determinato', 24, 13);
+
+update ContrattoDipendente set Stato = 'cessato'
+where TIMESTAMPDIFF(MONTH, Data, CURRENT_TIMESTAMP)>Durata;
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Attrezzatura
+--
+
+insert into Attrezzatura(Codice, qta, qtamin, Scaffale, ripiano) 
+values ('CavoRame10mt', 250, 100, 'cavi', 1),
+('CavoRame15mt', 300, 150, 'cavi', 1),
+('CavoRame1mt', 170, 80, 'cavi', 1),
+('CavoRame20mt', 349, 160, 'cavi', 1),
+('CavoRame3mt', 199, 130, 'cavi', 1),
+('CavoRame5mt', 230, 90, 'cavi', 1),
+('CavoRame2mt', 185, 80, 'cavi', 1),
+('FibraOttica30mt', 399, 300, 'cavi', 2),
+('FibraOttica50mt', 500, 400, 'cavi', 2),
+('FibraOttica200mt', 499, 350, 'cavi', 2),
+('FibraOttica100mt', 349, 250, 'cavi', 2),
+('RicambiPiastraUtente', 159, 100, 'centrale', 1),
+('ModemADSL', 199, 100, 'modem', 1),
+('RicambiModemADSL', 385, 100, 'modem', 2),
+('ModemVDSL', 169, 80, 'modem', 3),
+('RicambiModemVDSL', 427, 80, 'modem', 4);
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento Guasto
+--
+
+--
+-- Inserimento Guasto 1
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2016-09-13 13:15:11','basso', 'assistenza', 11, 'configurazione NAS', '3924577889');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (2, 1);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (7, 1);
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 1;
+
+update Guasto set DataChiusura = '2016-09-14 10:25:48'
+where Codice = 1;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 2 and Stato = 'effettuata')
+where Codice = 2;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 7 and Stato = 'effettuata')
+where Codice = 7;
+
+--
+-- Inserimento costo assistenza
+--
+
+update Guasto set Costo = 20
+where Guasto.Codice = 1;
+
+--
+-- Inserimento Guasto 2
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2016-12-20 11:02:13', 'basso', 'linea utente', 2, 'Il modem non si accende', '3905542440');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (2, 2);
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (7, 2, 'RicambiModemADSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'RicambiModemADSL';
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 2;
+
+update Guasto set DataChiusura = '2016-12-23 09:03:45'
+where Codice = 2;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 2 and Stato = 'effettuata')
+where Codice = 2;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 7 and Stato = 'effettuata')
+where Codice = 7;
+
+--
+-- Inserimento rimborso guasto
+--
+
+update Guasto set Rimborso = -7
+where Guasto.Codice = 2;
+
+--
+-- Inserimento Guasto 3
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2017-05-28 14:05:33', 'medio', 'linea utente', 14, 'segnale internet assente', '3924577889');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (1, 3);
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (6, 3, 'ModemADSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'ModemADSL';
+
+--
+-- Sostituzione modem
+--
+
+update Modem set CSeriale = 'AJ2835IYG44', Tipo = 'ADSL'
+where CSeriale = 'QW1045OYE34';
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 3;
+
+update Guasto set DataChiusura = '2017-05-28 16:06:39'
+where Codice = 3;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 1 and Stato = 'effettuata')
+where Codice = 1;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 6 and Stato = 'effettuata')
+where Codice = 6;
+
+--
+-- Inserimento Guasto 4
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2018-02-03 15:03:56', 'alto', 'linea utente', 1, 'il modem puzza di bruciato', '3795327112');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (1, 4);
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (6, 4, 'ModemVDSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'ModemVDSL';
+
+--
+-- Sostituzione modem
+--
+
+update Modem set CSeriale = 'HG3452LKJ12', Tipo = 'VDSL'
+where CSeriale = 'AC2065WJS42';
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 4;
+
+update Guasto set DataChiusura = '2018-02-03 17:35:46'
+where Codice = 4;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 1 and Stato = 'effettuata')
+where Codice = 1;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 6 and Stato = 'effettuata')
+where Codice = 6;
+
+--
+-- Inserimento Guasto 5
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2019-06-15 09:56:13','basso', 'assistenza', 8, 'Non riesco a configurare la stampante', '3452784554');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (5, 5);
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 5;
+
+update Guasto set DataChiusura = '2019-06-15 10:36:53'
+where Codice = 5;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 5 and Stato = 'effettuata')
+where Codice = 5;
+
+--
+-- Inserimento costo assistenza
+--
+
+update Guasto set Costo = 10
+where Guasto.Codice = 5;
+
+--
+-- Inserimento Guasto 6
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2019-06-23 11:02:13', 'basso', 'linea utente', 8, 'Il wi-fi non funziona', '3452784554');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (1, 6);
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (8, 6, 'RicambiModemVDSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'RicambiModemVDSL';
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 6;
+
+update Guasto set DataChiusura = '2019-06-25 15:03:30'
+where Codice = 6;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 1 and Stato = 'effettuata')
+where Codice = 1;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 8 and Stato = 'effettuata')
+where Codice = 8;
+
+--
+-- Inserimento rimborso guasto
+--
+
+update Guasto set Rimborso = -15
+where Guasto.Codice = 6;
+
+--
+-- Inserimento Guasto 7
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2019-11-15 17:15:00', 'basso', 'linea utente', 4, 'Il modem ha problemi con la accensione', '3694453264');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (3, 7);
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 7;
+
+update Guasto set DataChiusura = '2019-11-15 18:05:46'
+where Codice = 7;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 3 and Stato = 'effettuata')
+where Codice = 3;
+
+--
+-- Inserimento Guasto 8
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2019-12-03 11:17:59', 'basso', 'linea utente', 2, 'Segnale wi-fi assente', '3905542440');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (5, 8, 'RicambiModemVDSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'RicambiModemVDSL';
+
+--
+-- Chiusura del guasto
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 8;
+
+update Guasto set DataChiusura = '2019-12-04 13:45:06'
+where Codice = 8;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 5 and Stato = 'effettuata')
+where Codice = 5;
+
+--
+-- Inserimento Guasto 9
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-02-23 09:14:07', 'alto', 'linea utente', 8, 'Segnale telefonico assente, avvistamento incendio nei dintorni', '3452784554');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (1, 9);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (8, 9);
+
+--
+-- Inserimento Guasto 10
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2020-02-23 10:14:44', 'alto', 'centrale', 22);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 22;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (11, 10, 'CavoRame10mt');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'CavoRame10mt';
+
+--
+-- Chiusura del guasto 10
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 10;
+
+update Guasto set DataChiusura = '2020-02-23 17:15:41'
+where Codice = 10;
+
+update Impianto set Stato = 'attivo'
+where Codice = 22;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 11 and Stato = 'effettuata')
+where Codice = 11;
+
+--
+-- Chiusura del guasto 9
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 9;
+
+update Guasto set DataChiusura = '2020-02-23 17:35:40'
+where Codice = 9;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 1 and Stato = 'effettuata')
+where Codice = 1;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 8 and Stato = 'effettuata')
+where Codice = 8;
+
+--
+-- Inserimento Guasto 11
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-07-03 08:40:45', 'medio', 'linea utente', 12, 'Segnale internet e telefonico completamente assenti', '0392445743');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (1, 11);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (8, 11);
+
+--
+-- Inserimento Guasto 12
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2020-07-03 09:13:15', 'medio', 'centrale', 13);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 13;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (11, 12, 'CavoRame2mt');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'CavoRame2mt';
+
+--
+-- Chiusura del guasto 12
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 12;
+
+update Guasto set DataChiusura = '2020-07-03 19:30:34'
+where Codice = 12;
+
+update Impianto set Stato = 'attivo'
+where Codice = 13;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 11 and Stato = 'effettuata')
+where Codice = 11;
+
+--
+-- Chiusura del guasto 11
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 11;
+
+update Guasto set DataChiusura = '2020-07-03 20:15:43'
+where Codice = 11;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 1 and Stato = 'effettuata')
+where Codice = 1;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 8 and Stato = 'effettuata')
+where Codice = 8;
+
+--
+-- Inserimento Guasto 13
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-07-15 16:30:15', 'medio', 'linea utente', 10, 'Il telefono non permette di effettuare e ricevere chiamate', '3493355262');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (4, 13);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (6, 13);
+
+--
+-- Inserimento Guasto 14
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2020-07-17 09:15:55', 'medio', 'centrale', 3);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 3;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (11, 14, 'CavoRame15mt');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'CavoRame15mt';
+
+--
+-- Chiusura del guasto 14
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 14;
+
+update Guasto set DataChiusura = '2020-07-24 16:45:37'
+where Codice = 14;
+
+update Impianto set Stato = 'attivo'
+where Codice = 3;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 11 and Stato = 'effettuata')
+where Codice = 11;
+
+--
+-- Chiusura del guasto 13
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 13;
+
+update Guasto set DataChiusura = '2020-07-25 08:06:20'
+where Codice = 13;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 4 and Stato = 'effettuata')
+where Codice = 4;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 6 and Stato = 'effettuata')
+where Codice = 6;
+
+--
+-- Inserimento rimborso guasto
+--
+
+update Guasto set Rimborso = -25
+where Guasto.Codice = 13;
+
+--
+-- Inserimento Guasto 15
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-08-30 14:16:18', 'basso', 'linea utente', 15, 'Il modem presenta problemi di incompatibilita con i ripetitori wi-fi', '3375833299');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (3, 15);
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (6, 15, 'ModemVDSL');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'ModemVDSL';
+
+--
+-- Sostituzione modem
+--
+
+update Modem set CSeriale = 'GT4738AZU47', Tipo = 'VDSL'
+where CSeriale = 'SD1096SJG56';
+
+--
+-- Chiusura del guasto 15
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 15;
+
+update Guasto set DataChiusura = '2020-08-31 09:05:23'
+where Codice = 15;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 3 and Stato = 'effettuata')
+where Codice = 3;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 6 and Stato = 'effettuata')
+where Codice = 6;
+
+--
+-- Inserimento rimborso guasto
+--
+
+update Guasto set Rimborso = -10
+where Guasto.Codice = 15;
+
+--
+-- Inserimento Guasto 16
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-10-01 11:10:43', 'alto', 'linea utente', 11, 'linea isolata', '3924577889');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (3, 16);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (8, 16);
+
+--
+-- Inserimento Guasto 17
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2020-10-01 12:34:23', 'alto', 'centrale', 8);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 8;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (15, 17, 'RicambiPiastraUtente');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'RicambiPiastraUtente';
+
+--
+-- Chiusura del guasto 17
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 17;
+
+update Guasto set DataChiusura = '2020-10-02 08:15:47'
+where Codice = 17;
+
+update Impianto set Stato = 'attivo'
+where Codice = 8;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 15 and Stato = 'effettuata')
+where Codice = 15;
+
+--
+-- Chiusura del guasto 16
+--
+
+update Riparazione set Stato = 'effettuata'
+where CodGuasto = 16;
+
+update Guasto set DataChiusura = '2020-10-02 09:16:25'
+where Codice = 16;
+
+--
+-- Aggiornamento numero guasti riparati dal tecnico 
+--
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 3 and Stato = 'effettuata')
+where Codice = 3;
+
+update Tecnico set NguastiRip = ( select count(*) from Riparazione
+where CodTecnico = 8 and Stato = 'effettuata')
+where Codice = 8;
+
+--
+-- Inserimento Guasto 18
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2020-12-30 18:30:35', 'medio', 'linea utente', 6, 'segnale telefonico assente', '3795267883');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (4, 18);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (8, 18);
+
+--
+-- Inserimento Guasto 19
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2020-12-31 08:40:35', 'medio', 'centrale', 12);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 12;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (10, 19, 'FibraOttica30mt');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'FibraOttica30mt';
+
+--
+-- Inserimento Guasto 20
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodCliente, Descrizione, RecapitoCl) 
+values ('2021-01-02 09:03:12', 'medio', 'linea utente', 4, 'segnale acustico assente', '3694453264');
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (5, 20);
+
+insert into Riparazione (CodTecnico, CodGuasto)
+values (6, 20);
+
+--
+-- Inserimento Guasto 21
+--
+
+insert into Guasto (DataApertura, GradoPericolo, Tipo, CodImpianto) 
+values ('2021-01-03 08:15:31', 'medio', 'centrale', 17);
+
+update Impianto set Stato = 'malfunzionante'
+where Codice = 17;
+
+--
+-- Avvio riparazione del guasto
+--
+
+insert into Riparazione (CodTecnico, CodGuasto, CodAttrezzatura)
+values (9, 21, 'FibraOttica100mt');
+
+update Attrezzatura set qta = (qta-1)
+where Codice = 'FibraOttica100mt';
+
+-- ---------------------------------------------------------------------------
+
+--
+-- Inserimento bollette
+--
+
+--
+-- Inserimento bolletta 1
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2018-02-12', '2018-02-22', '11/01/2018-11/02/2018', 'HG3452LKJ12');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 1 and DataChiusura between '2018-01-11' and '2018-02-11')
+where CodModem = 'HG3452LKJ12' and NFattura = 1;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 1 and DataChiusura between '2018-01-11' and '2018-02-11')
+where CodModem = 'HG3452LKJ12' and NFattura = 1;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 1;
+
+--
+-- Inserimento bolletta 2
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-12', '2020-12-22', '11/11/2020-11/12/2020', 'HG3452LKJ12');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 1 and DataChiusura between '2020-11-11' and '2020-12-11')
+where CodModem = 'HG3452LKJ12' and NFattura = 2;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 1 and DataChiusura between '2020-11-11' and '2020-12-11')
+where CodModem = 'HG3452LKJ12' and NFattura = 2;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 2;
+
+--
+-- Inserimento bolletta 3
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2017-01-12', '2017-01-22', '11/12/2016-11/01/2017', 'AK2098DLK89');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2016-12-11' and '2017-01-11')
+where CodModem = 'AK2098DLK89' and NFattura = 3;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2016-12-11' and '2017-01-11')
+where CodModem = 'AK2098DLK89' and NFattura = 3;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 3;
+
+--
+-- Inserimento bolletta 4
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2019-02-12', '2019-02-22', '11/01/2019-11/02/2019', 'AK2098DLK89');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2019-01-11' and '2019-02-11')
+where CodModem = 'AK2098DLK89' and NFattura = 4;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2019-01-11' and '2019-02-11')
+where CodModem = 'AK2098DLK89' and NFattura = 4;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 4;
+
+--
+-- Inserimento bolletta 5
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-01-03', '2020-01-13', '02/12/2019-02/01/2020', 'AZ6057KOJ23');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2019-12-02' and '2020-01-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 5;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2019-12-02' and '2020-01-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 5;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 5;
+
+--
+-- Inserimento bolletta 6
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-07-03', '2020-07-13', '02/06/2020-02/07/2020', 'AZ6057KOJ23');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2020-06-02' and '2020-07-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 6;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2020-06-02' and '2020-07-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 6;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 6;
+
+--
+-- Inserimento bolletta 7
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2021-01-03', '2021-01-13', '02/12/2020-02/01/2021', 'AZ6057KOJ23');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2020-12-02' and '2021-01-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 7;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 2 and DataChiusura between '2020-12-02' and '2021-01-02')
+where CodModem = 'AZ6057KOJ23' and NFattura = 7;
+
+--
+-- Inserimento bolletta 8
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2019-12-03', '2019-12-13', '02/11/2019-02/12/2019', 'FD5466OHT23');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2019-11-02' and '2019-12-02')
+where CodModem = 'FD5466OHT23' and NFattura = 8;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2019-11-02' and '2019-12-02')
+where CodModem = 'FD5466OHT23' and NFattura = 8;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 8;
+
+--
+-- Inserimento bolletta 9
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-03', '2020-12-13', '02/11/2020-02/12/2020', 'FD5466OHT23');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2020-11-02' and '2020-12-02')
+where CodModem = 'FD5466OHT23' and NFattura = 9;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2020-11-02' and '2020-12-02')
+where CodModem = 'FD5466OHT23' and NFattura = 9;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 9;
+
+--
+-- Inserimento bolletta 10
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-23', '2021-01-02', '22/11/2020-22/12/2020', 'KJ5032WSA18');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2020-11-22' and '2020-12-22')
+where CodModem = 'KJ5032WSA18' and NFattura = 10;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 4 and DataChiusura between '2020-11-22' and '2020-12-22')
+where CodModem = 'KJ5032WSA18' and NFattura = 10;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 10;
+
+--
+-- Inserimento bolletta 11
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-18', '2020-12-28', '17/11/2020-17/12/2020', 'LE6784WQO20');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 5 and DataChiusura between '2020-11-17' and '2020-12-17')
+where CodModem = 'LE6784WQO20' and NFattura = 11;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 5 and DataChiusura between '2020-11-17' and '2020-12-17')
+where CodModem = 'LE6784WQO20' and NFattura = 11;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 11;
+
+--
+-- Inserimento bolletta 12
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-20', '2020-12-30', '19/11/2020-19/12/2020', 'LK6087FGE30');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 6 and DataChiusura between '2020-11-19' and '2020-12-19')
+where CodModem = 'LK6087FGE30' and NFattura = 12;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 6 and DataChiusura between '2020-11-19' and '2020-12-19')
+where CodModem = 'LK6087FGE30' and NFattura = 12;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 12;
+
+--
+-- Inserimento bolletta 13
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2019-07-05', '2019-07-15', '04/06/2019-04/07/2019', 'OT3209LIU11');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2019-06-04' and '2019-07-04')
+where CodModem = 'OT3209LIU11' and NFattura = 13;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2019-06-04' and '2019-07-04')
+where CodModem = 'OT3209LIU11' and NFattura = 13;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 13;
+
+--
+-- Inserimento bolletta 14
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-03-05', '2020-03-15', '04/02/2020-04/03/2020', 'OT3209LIU11');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2020-02-04' and '2020-03-04')
+where CodModem = 'OT3209LIU11' and NFattura = 14;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2020-02-04' and '2020-03-04')
+where CodModem = 'OT3209LIU11' and NFattura = 14;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 14;
+
+--
+-- Inserimento bolletta 15
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2021-01-05', '2021-01-15', '04/12/2020-04/01/2021', 'OT3209LIU11');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2020-12-04' and '2021-01-04')
+where CodModem = 'OT3209LIU11' and NFattura = 15;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 8 and DataChiusura between '2020-12-04' and '2021-01-04')
+where CodModem = 'OT3209LIU11' and NFattura = 15;
+
+--
+-- Inserimento bolletta 16
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-08-21', '2020-08-31', '20/07/2020-20/08/2020', 'PL3065ASW13');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 10 and DataChiusura between '2020-07-20' and '2020-08-20')
+where CodModem = 'PL3065ASW13' and NFattura = 16;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 10 and DataChiusura between '2020-07-20' and '2020-08-20')
+where CodModem = 'PL3065ASW13' and NFattura = 16;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 16;
+
+--
+-- Inserimento bolletta 17
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-21', '2020-12-31', '20/11/2020-20/12/2020', 'PL3065ASW13');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 10 and DataChiusura between '2020-11-20' and '2020-12-20')
+where CodModem = 'PL3065ASW13' and NFattura = 17;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 10 and DataChiusura between '2020-11-20' and '2020-12-20')
+where CodModem = 'PL3065ASW13' and NFattura = 17;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 17;
+
+--
+-- Inserimento bolletta 18
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2016-09-26', '2016-10-06', '25/08/2016-25/09/2016', 'PO3309KKF66');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2016-08-25' and '2016-09-25')
+where CodModem = 'PO3309KKF66' and NFattura = 18;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2016-08-25' and '2016-09-25')
+where CodModem = 'PO3309KKF66' and NFattura = 18;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 18;
+
+--
+-- Inserimento bolletta 19
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-08-26', '2020-09-05', '25/07/2020-25/08/2020', 'PO3309KKF66');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-07-25' and '2020-08-25')
+where CodModem = 'PO3309KKF66' and NFattura = 19;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-07-25' and '2020-08-25')
+where CodModem = 'PO3309KKF66' and NFattura = 19;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 19;
+
+--
+-- Inserimento bolletta 20
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-10-26', '2020-11-05', '25/09/2020-25/10/2020', 'TU5503EOQ45');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-09-25' and '2020-10-25')
+where CodModem = 'TU5503EOQ45' and NFattura = 20;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-09-25' and '2020-10-25')
+where CodModem = 'TU5503EOQ45' and NFattura = 20;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 20;
+
+--
+-- Inserimento bolletta 21
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-26', '2021-01-05', '25/11/2020-25/12/2020', 'TU5503EOQ45');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-11-25' and '2020-12-25')
+where CodModem = 'TU5503EOQ45' and NFattura = 21;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 11 and DataChiusura between '2020-11-25' and '2020-12-25')
+where CodModem = 'TU5503EOQ45' and NFattura = 21;
+
+--
+-- Inserimento bolletta 22
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-07-16', '2020-07-26', '15/06/2020-15/07/2020', 'PT5743QIU02');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 12 and DataChiusura between '2020-06-15' and '2020-07-15')
+where CodModem = 'PT5743QIU02' and NFattura = 22;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 12 and DataChiusura between '2020-06-15' and '2020-07-15')
+where CodModem = 'PT5743QIU02' and NFattura = 22;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 22;
+
+--
+-- Inserimento bolletta 23
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-16', '2020-12-26', '15/11/2020-15/12/2020', 'PT5743QIU02');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 12 and DataChiusura between '2020-11-15' and '2020-12-15')
+where CodModem = 'PT5743QIU02' and NFattura = 23;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 12 and DataChiusura between '2020-11-15' and '2020-12-15')
+where CodModem = 'PT5743QIU02' and NFattura = 23;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 23;
+
+--
+-- Inserimento bolletta 24
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2017-06-26', '2017-07-06', '25/05/2017-25/06/2017', 'AJ2835IYG44');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 14 and DataChiusura between '2017-05-25' and '2017-06-25')
+where CodModem = 'AJ2835IYG44' and NFattura = 24;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 14 and DataChiusura between '2017-05-25' and '2017-06-25')
+where CodModem = 'AJ2835IYG44' and NFattura = 24;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 24;
+
+--
+-- Inserimento bolletta 25
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2019-03-26', '2019-04-05', '25/02/2019-25/03/2019', 'AJ2835IYG44');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 14 and DataChiusura between '2019-02-25' and '2019-03-25')
+where CodModem = 'AJ2835IYG44' and NFattura = 25;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 14 and DataChiusura between '2019-02-25' and '2019-03-25')
+where CodModem = 'AJ2835IYG44' and NFattura = 25;
+
+--
+-- Inserimento bolletta 26
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-09-12', '2020-09-22', '11/08/2020-11/09/2020', 'GT4738AZU47');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 15 and DataChiusura between '2020-08-11' and '2020-09-11')
+where CodModem = 'GT4738AZU47' and NFattura = 26;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 15 and DataChiusura between '2020-08-11' and '2020-09-11')
+where CodModem = 'GT4738AZU47' and NFattura = 26;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 26;
+
+--
+-- Inserimento bolletta 27
+--
+
+insert into Bolletta(Data, Scadenza, Periodo, CodModem)
+values ('2020-12-12', '2020-12-22', '11/11/2020-11/12/2020', 'GT4738AZU47');
+
+--
+-- Calcolo Rimborso Guasti in Bolletta
+--
+
+update Bolletta set RimborsoGuasti = 
+(select IFNULL(sum(Guasto.Rimborso), 0) from Guasto 
+where CodCliente = 15 and DataChiusura between '2020-11-11' and '2020-12-11')
+where CodModem = 'GT4738AZU47' and NFattura = 27;
+
+--
+-- Calcolo Costo Assistenze in Bolletta
+--
+
+update Bolletta set CostoAssistenze = 
+(select IFNULL(sum(Guasto.Costo), 0) from Guasto 
+where CodCliente = 15 and DataChiusura between '2020-11-11' and '2020-12-11')
+where CodModem = 'GT4738AZU47' and NFattura = 27;
+
+--
+-- Aggiornamento pagamento
+--
+
+update Bolletta set StatoPag = 'effettuato' 
+where Nfattura = 27;
