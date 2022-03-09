@@ -13,6 +13,7 @@ Nella progettazione si è optato per un approccio ibrido tra bottom-up e top-dow
 
 ## Codifica SQL e testing
 Si riporta di seguito la definizione dello schema in linguaggio sql e l’output del terminale riguardante le tabelle così come sono implementate nel dump allegato. Per completezza e per garantire una maggiore leggibilità riportiamo in questa posizione anche l’output con l’elenco di tutte le tabelle implementate.
+
 ![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/showtables.png)
 
 ### DEFINIZIONE DELLO SCHEMA E OUTPUT DEL TERMINALE A SEGUITO DELL’INSERIMENTO DEI DATI 
