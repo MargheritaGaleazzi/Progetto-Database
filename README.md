@@ -77,10 +77,6 @@ Di seguito sono riportate alcune operazioni, più significative, scritte in SQL 
 
 ![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query29.png)
 
-**Statistica contratti per tipo collegamento (una volta ogni sei mesi)**
-
-![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query30.png)
-
 **Statistica offerta maggiormente sottoscritta dai clienti (una volta
 ogni due mesi)**
 
