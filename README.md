@@ -67,6 +67,25 @@ Si riporta di seguito la definizione dello schema in linguaggio sql e l’output
 
 ### CODIFICA DELLE OPERAZIONI E OUTPUT DEL TERMINALE
 
+Di seguito sono riportate alcune operazioni, più significative, scritte in SQL e l'output del terminale.
+
+**Statistica numero guasti per tipo (una volta ogni due mesi)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query28.png)
+
+**Statistica acquisizione clienti (una volta al mese)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query29.png)
+
+**Statistica contratti per tipo collegamento (una volta ogni sei mesi)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query30.png)
+
+**Statistica offerta maggiormente sottoscritta dai clienti (una volta
+ogni due mesi)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query31.png)
+
 ## Sviluppatori
 
  - Margherita Galeazzi
