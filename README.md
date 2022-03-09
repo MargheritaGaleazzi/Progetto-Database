@@ -77,10 +77,63 @@ Di seguito sono riportate alcune operazioni, più significative, scritte in SQL 
 
 ![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query29.png)
 
+**Statistica contratti per tipo collegamento (una volta ogni sei mesi)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/quey30.png)
+
 **Statistica offerta maggiormente sottoscritta dai clienti (una volta
 ogni due mesi)**
 
 ![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query31.png)
+
+**Visualizzazione offerta non sottoscritta da alcun cliente (una volta
+ogni due mesi)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query32.png)
+
+**Statistica guasti riparati per tecnico (una volta al mese)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query33.png)
+
+**Statistica numero tecnici per ruolo e specializzazione (due volte
+l’anno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query34.png)
+
+**Statistica numero clienti in base alla fascia (due volte l’anno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query36.png)
+
+**Statistica numero contratti per cliente (una volta al mese)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query37.png)
+
+**Statistica ragione sociale azienda (due volte l’anno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query38.png)
+
+**Statistica dipendenti con contratto a tempo indeterminato (una
+volta l’anno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query39.png)
+
+**Statistica numero guasti per grado di pericolo (una volta al mese)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query40.png)
+
+**Verifica avvenuto pagamento bolletta da parte dei clienti (una
+volta al giorno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query41.png)
+
+**Visualizzazione bollette con scadenza la settimana successiva alla
+data di consultazione (una volta a settimana)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query42.png)
+
+**Consultazione tecnici occupati (quindici volte al giorno)**
+
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/query44.png)
 
 ## Sviluppatori
 
