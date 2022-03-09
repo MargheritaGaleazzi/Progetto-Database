@@ -19,28 +19,40 @@ Si riporta di seguito la definizione dello schema in linguaggio sql e l’output
 ### DEFINIZIONE DELLO SCHEMA E OUTPUT DEL TERMINALE A SEGUITO DELL’INSERIMENTO DEI DATI 
 **Struttura della tabella “ContrattoCliente”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectContrattoCliente.png)
 **Struttura della tabella “Cliente”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectCliente.png)
 **Struttura della tabella “Offerta”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectOfferta.png)
 **Struttura della tabella “ContrattoDipendente”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectContrattoDipendente.png)
 **Struttura della tabella “Tecnico”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectTecnico.png)
 **Struttura della tabella “Bolletta”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectBolletta.png)
 **Struttura della tabella “Modem”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectModem.png)
 **Struttura della tabella “Impianto”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectImpianto.png)
 **Struttura della tabella “Guasto”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectGuasto.png)
 **Struttura della tabella “Attrezzatura”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectAttrezzatura.png)
 **Struttura della tabella “Email”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectEmail.png)
 **Struttura della tabella “Riparazione”**
 
+![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectRiparazione.png)
 ## Sviluppatori
 
  - Margherita Galeazzi
