@@ -65,6 +65,8 @@ Si riporta di seguito la definizione dello schema in linguaggio sql e l’output
 
 ![](https://github.com/MargheritaGaleazzi/Progetto-Database/blob/main/immagini%20query%20database/selectRiparazione.png)
 
+### CODIFICA DELLE OPERAZIONI E OUTPUT DEL TERMINALE
+
 ## Sviluppatori
 
  - Margherita Galeazzi
